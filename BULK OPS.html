@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security List with Bulk Edit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .main-container { display: flex; }
+        .list-panel { flex: 1; padding-right: 15px; }
+        .detail-panel { flex: 1; padding-left: 15px; border-left: 1px solid #ddd; display: none; }
+        .modal-dialog { max-width: 80%; }
+        .left-panel { border-right: 1px solid #ddd; padding-right: 15px; }
+        .right-panel { padding-left: 15px; }
+        .accordion-button { font-weight: bold; }
+        .attribute-section { display: none; }
+        tr.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            background-color: #f8f9fa;
+        }
+        tr.disabled td:first-child input { pointer-events: none; }
+        .type-hint { font-size: 0.9rem; color: #666; margin-bottom: 8px; }
+        .equity-only { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h4>Security Database</h4>
+    <div class="toolbar mb-3">
+        <input type="text" class="form-control d-inline-block w-auto me-2" id="mainSearchInput" placeholder="Search securities...">
+        <button type="button" class="btn btn-primary" id="bulkEditBtn">Bulk Edit Selected</button>
+    </div>
+    <div class="type-hint" id="typeHint">Bulk edit requires selecting securities of the same type only.</div>
+
+    <div class="main-container">
+        <div class="list-panel">
+            <table class="table table-striped" id="mainSecuritiesTable">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Tradable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-type="Equity" data-tradable="On">
+                        <td><input type="checkbox" class="select-checkbox"></td>
+                        <td>001</td>
+                        <td>AAPL</td>
+                        <td>Equity</td>
+                        <td>On</td>
+                    </tr>
+                    <tr data-type="Equity" data-tradable="Off">
+                        <td><input type="checkbox" class="select-checkbox"></td>
+                        <td>002</td>
+                        <td>GOOG</td>
+                        <td>Equity</td>
+                        <td>Off</td>
+                    </tr>
+                    <tr data-type="Index" data-tradable="N/A">
+                        <td><input type="checkbox" class="select-checkbox"></td>
+                        <td>003</td>
+                        <td>SPX</td>
+                        <td>Index</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr data-type="Index" data-tradable="N/A">
+                        <td><input type="checkbox" class="select-checkbox"></td>
+                        <td>004</td>
+                        <td>NDX</td>
+                        <td>Index</td>
+                        <td>N/A</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="detail-panel" id="detailPanel">
+            <h5 id="detailTitle">Security Details</h5>
+            <form id="singleEditForm"></form>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Edit Modal -->
+<div class="modal fade" id="bulkEditModal" tabindex="-1" aria-labelledby="bulkEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkEditModalLabel">Bulk Modify Security Attributes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 left-panel">
+                        <h6>Selected Securities</h6>
+                        <table class="table table-striped table-sm" id="selectedSecuritiesTable">
+                            <thead>
+                                <tr><th>ID</th><th>Name</th><th>Type</th><th>Tradable</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="col-md-8 right-panel">
+                        <h6>Select Attributes to Modify</h6>
+
+                        <!-- 属性选择区 -->
+                        <div id="attributeList">
+                            <!-- Routing 始终显示 -->
+                            <div class="form-check">
+                                <input class="form-check-input attribute-check" type="checkbox" id="routingCheck" data-target="routingSection">
+                                <label class="form-check-label" for="routingCheck">Routing (Option Group & Complex Group)</label>
+                            </div>
+
+                            <!-- Equity 专属属性（纯 Index 时隐藏） -->
+                            <div class="equity-only">
+                                <div class="form-check">
+                                    <input class="form-check-input attribute-check" type="checkbox" id="tradableCheck" data-target="tradableSection">
+                                    <label class="form-check-label" for="tradableCheck">Tradable</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input attribute-check" type="checkbox" id="closingOnlyCheck" data-target="closingOnlySection">
+                                    <label class="form-check-label" for="closingOnlyCheck">Closing Only</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input attribute-check" type="checkbox" id="tradingSessionCheck" data-target="tradingSessionSection">
+                                    <label class="form-check-label" for="tradingSessionCheck">Trading Session</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input attribute-check" type="checkbox" id="fractionalCheck" data-target="fractionalSection">
+                                    <label class="form-check-label" for="fractionalCheck">Fractional Setting</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input attribute-check" type="checkbox" id="advThresholdCheck" data-target="advThresholdSection">
+                                    <label class="form-check-label" for="advThresholdCheck">ADV Threshold</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <form id="editorForm">
+                            <ul class="nav nav-tabs" id="typeTabs" role="tablist" style="display: none;">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="equity-tab" data-bs-toggle="tab" data-bs-target="#equity">Equity</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="index-tab" data-bs-toggle="tab" data-bs-target="#index">Index</button>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" id="typeTabContent">
+                                <!-- Equity Tab -->
+                                <div class="tab-pane fade show active" id="equity" role="tabpanel">
+                                    <div id="tradableSection" class="attribute-section mb-3">
+                                        <label>Tradable</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="tradableSwitch">
+                                            <label class="form-check-label" for="tradableSwitch">On/Off</label>
+                                        </div>
+                                    </div>
+                                    <div id="closingOnlySection" class="attribute-section mb-3">
+                                        <label>Closing Only</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="closingOnlySwitch">
+                                            <label class="form-check-label" for="closingOnlySwitch">On/Off</label>
+                                        </div>
+                                    </div>
+                                    <div id="tradingSessionSection" class="attribute-section mb-3">
+                                        <label>Trading Session (Multi-select)</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="rth"><label for="rth">RTH</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="prePost"><label for="prePost">Pre/Post</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="overnight"><label for="overnight">Overnight</label>
+                                        </div>
+                                    </div>
+                                    <div id="fractionalSection" class="attribute-section accordion mb-3">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fractionalCollapse">
+                                                    Fractional Setting
+                                                </button>
+                                            </h2>
+                                            <div id="fractionalCollapse" class="accordion-collapse collapse">
+                                                <div class="accordion-body">
+                                                    <div class="mb-3">
+                                                        <label>Fractional Eligible</label>
+                                                        <select class="form-select" id="fractionalEligible">
+                                                            <option>Yes</option><option>No</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3"><label>Fractional Threshold Mid</label><input type="number" class="form-control" id="thresholdMid"></div>
+                                                    <div class="mb-3"><label>Fractional Threshold High</label><input type="number" class="form-control" id="thresholdHigh"></div>
+                                                    <div class="mb-3">
+                                                        <label>Fractional Decimals</label>
+                                                        <select class="form-select" id="fractionalDecimals">
+                                                            <option>1</option><option>2</option><option>3</option><option>4</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="advThresholdSection" class="attribute-section accordion mb-3">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advThresholdCollapse">
+                                                    ADV Threshold
+                                                </button>
+                                            </h2>
+                                            <div id="advThresholdCollapse" class="accordion-collapse collapse">
+                                                <div class="accordion-body">
+                                                    <div class="mb-3"><label>ADV Days</label><select class="form-select" id="advDays"><option>30</option><option>60</option><option>90</option><option>120</option></select></div>
+                                                    <div class="mb-3"><label>ADV Percentage (%)</label><input type="number" class="form-control" id="advPercentage"></div>
+                                                    <div class="mb-3"><label>ADV Alert Level</label><select class="form-select" id="advAlertLevel"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="routingSection" class="attribute-section accordion mb-3">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#routingCollapse">
+                                                    Routing
+                                                </button>
+                                            </h2>
+                                            <div id="routingCollapse" class="accordion-collapse collapse">
+                                                <div class="accordion-body">
+                                                    <div class="mb-3">
+                                                        <label>Option Group</label>
+                                                        <select class="form-select" id="optionGroupEquity">
+                                                            <option>Option Group A</option>
+                                                            <option>Option Group B</option>
+                                                            <option>Option Group C</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label>Complex Group</label>
+                                                        <select class="form-select" id="complexGroupEquity">
+                                                            <option>Complex Group X</option>
+                                                            <option>Complex Group Y</option>
+                                                            <option>Complex Group Z</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Index Tab - 只保留 Routing -->
+                                <div class="tab-pane fade" id="index">
+                                    <div id="routingSectionIndex" class="attribute-section mb-3">
+                                        <div class="mb-3">
+                                            <label>Option Group</label>
+                                            <select class="form-select" id="optionGroupIndex">
+                                                <option>Option Group A</option>
+                                                <option>Option Group B</option>
+                                                <option>Option Group C</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label>Complex Group</label>
+                                            <select class="form-select" id="complexGroupIndex">
+                                                <option>Complex Group X</option>
+                                                <option>Complex Group Y</option>
+                                                <option>Complex Group Z</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <button class="btn btn-info mt-3" id="previewBtn">Preview Changes</button>
+                        <div id="previewTable" class="mt-3" style="display: none;">
+                            <h6>Preview of Changes</h6>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Security</th>
+                                        <th>Attribute</th>
+                                        <th>Current Value</th>
+                                        <th>New Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="previewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="applyBtn">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedType = null;
+
+    const bulkEditBtn = document.getElementById('bulkEditBtn');
+    const selectAll = document.getElementById('selectAll');
+    const mainTable = document.getElementById('mainSecuritiesTable');
+    const typeHint = document.getElementById('typeHint');
+    const modal = document.getElementById('bulkEditModal');
+    const selectedTableBody = document.getElementById('selectedSecuritiesTable').querySelector('tbody');
+    const previewBtn = document.getElementById('previewBtn');
+    const applyBtn = document.getElementById('applyBtn');
+    const previewBody = document.getElementById('previewBody');
+    const typeTabs = document.getElementById('typeTabs');
+    const equityOnlyAttrs = document.querySelector('.equity-only');
+
+    function updateTypeRestriction() {
+        const checked = mainTable.querySelectorAll('.select-checkbox:checked');
+        if (checked.length === 0) {
+            selectedType = null;
+            typeHint.textContent = "Bulk edit requires selecting securities of the same type only.";
+            mainTable.querySelectorAll('tbody tr').forEach(row => row.classList.remove('disabled'));
+            selectAll.disabled = false;
+            return;
+        }
+
+        if (!selectedType) {
+            selectedType = checked[0].closest('tr').dataset.type;
+            typeHint.textContent = `Selected type: ${selectedType}`;
+        }
+
+        mainTable.querySelectorAll('tbody tr').forEach(row => {
+            if (row.dataset.type !== selectedType) {
+                row.classList.add('disabled');
+                const cb = row.querySelector('.select-checkbox');
+                if (cb) cb.checked = false;
+            } else {
+                row.classList.remove('disabled');
+            }
+        });
+
+        selectAll.checked = Array.from(mainTable.querySelectorAll('tr:not(.disabled) .select-checkbox')).every(cb => cb.checked);
+    }
+
+    mainTable.querySelectorAll('.select-checkbox').forEach(cb => cb.addEventListener('change', updateTypeRestriction));
+
+    selectAll.addEventListener('change', function() {
+        if (this.checked) {
+            mainTable.querySelectorAll('tr:not(.disabled) .select-checkbox').forEach(cb => cb.checked = true);
+        } else {
+            mainTable.querySelectorAll('.select-checkbox').forEach(cb => cb.checked = false);
+        }
+        updateTypeRestriction();
+    });
+
+    document.getElementById('mainSearchInput').addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        mainTable.querySelectorAll('tbody tr').forEach(row => {
+            const matches = row.textContent.toLowerCase().includes(filter);
+            row.style.display = matches ? '' : 'none';
+            if (!matches && row.querySelector('.select-checkbox').checked) {
+                row.querySelector('.select-checkbox').checked = false;
+            }
+        });
+        updateTypeRestriction();
+    });
+
+    bulkEditBtn.addEventListener('click', function() {
+        const selected = mainTable.querySelectorAll('.select-checkbox:checked');
+        if (selected.length === 0) return alert('Please select at least one security.');
+
+        const types = new Set(Array.from(selected).map(cb => cb.closest('tr').dataset.type));
+        if (types.size > 1) {
+            alert('Bulk edit is only allowed for securities of the same type.\nPlease deselect securities from other types.');
+            return;
+        }
+
+        selectedTableBody.innerHTML = '';
+        selected.forEach(cb => {
+            const clone = cb.closest('tr').cloneNode(true);
+            clone.querySelector('.select-checkbox')?.remove();
+            selectedTableBody.appendChild(clone);
+        });
+
+        const isPureIndex = types.has('Index');
+        equityOnlyAttrs.style.display = isPureIndex ? 'none' : 'block';
+
+        // 关键修复：每次打开弹窗，重置所有 checkbox 和 section 状态
+        document.querySelectorAll('.attribute-check').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        document.querySelectorAll('.attribute-section').forEach(section => {
+            section.style.display = 'none';
+        });
+
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+        checkSecurityTypes();
+    });
+
+    function checkSecurityTypes() {
+        const types = new Set();
+        selectedTableBody.querySelectorAll('tr').forEach(row => types.add(row.dataset.type));
+        typeTabs.style.display = types.size > 1 ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('.attribute-check').forEach(check => {
+        check.addEventListener('change', function() {
+            const section = document.getElementById(this.dataset.target);
+            if (section) section.style.display = this.checked ? 'block' : 'none';
+        });
+    });
+
+    previewBtn.addEventListener('click', function() {
+        previewBody.innerHTML = '';
+        const rows = selectedTableBody.querySelectorAll('tr');
+        const checked = document.querySelectorAll('.attribute-check:checked');
+
+        rows.forEach(row => {
+            checked.forEach(chk => {
+                const attr = chk.id.replace('Check', '');
+                let newVal = 'N/A';
+                if (attr === 'routing') {
+                    const og = document.getElementById('optionGroupEquity')?.value || document.getElementById('optionGroupIndex')?.value || '—';
+                    const cg = document.getElementById('complexGroupEquity')?.value || document.getElementById('complexGroupIndex')?.value || '—';
+                    newVal = `Option Group: ${og}, Complex Group: ${cg}`;
+                }
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.cells[1].textContent}</td>
+                    <td>${attr}</td>
+                    <td>${row.dataset[attr.toLowerCase()] || '—'}</td>
+                    <td>${newVal}</td>
+                `;
+                previewBody.appendChild(tr);
+            });
+        });
+
+        document.getElementById('previewTable').style.display = previewBody.children.length ? 'block' : 'none';
+    });
+
+    applyBtn.addEventListener('click', function() {
+        alert('Changes applied successfully! (Simulated)');
+        bootstrap.Modal.getInstance(modal).hide();
+        selectedType = null;
+        updateTypeRestriction();
+    });
+
+    updateTypeRestriction();
+});
+</script>
+</body>
+</html>
