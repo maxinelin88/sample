@@ -3,306 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security List with Bulk Edit</title>
+    <title>Security Management - Side Panel Edit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        body { padding: 20px; }
-        .main-container { display: flex; }
-        .list-panel { flex: 1; padding-right: 15px; }
-        .detail-panel { flex: 1; padding-left: 15px; border-left: 1px solid #ddd; display: none; }
-        .modal-dialog { max-width: 80%; }
-        .left-panel { border-right: 1px solid #ddd; padding-right: 15px; }
-        .right-panel { padding-left: 15px; }
-        .accordion-button { font-weight: bold; }
-        .attribute-section { display: none; }
-        tr.disabled {
-            opacity: 0.5;
-            pointer-events: none;
-            background-color: #f8f9fa;
+        body { padding: 20px; background-color: #f4f7f9; }
+        .main-wrapper { display: flex; gap: 20px; transition: all 0.3s; }
+        
+        /* 树形列表样式 */
+        .tree-container { flex: 1; background: white; border-radius: 8px; border: 1px solid #dee2e6; overflow: hidden; }
+        .tree-row { 
+            display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee;
+            transition: background 0.2s;
         }
-        tr.disabled td:first-child input { pointer-events: none; }
-        .type-hint { font-size: 0.9rem; color: #666; margin-bottom: 8px; }
-        .equity-only { display: none; }
+        .tree-row:hover { background-color: #f8f9fa; }
+        .tree-row.disabled { opacity: 0.4; pointer-events: none; background-color: #f1f1f1; }
+        
+        /* 层级缩进 */
+        .level-stock, .level-index { font-weight: bold; }
+        .level-chain { padding-left: 40px; border-left: 4px solid #0d6efd; background: #fcfdfe; }
+        .level-option { padding-left: 80px; border-left: 4px solid #6c757d; }
+
+        /* 右侧滑出面板定制 */
+        .offcanvas-edit { width: 550px !important; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
+        .attr-group { border: 1px solid #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #fff; }
+        .field-label { font-weight: 600; color: #495057; display: block; margin-bottom: 8px; }
+        .field-sub-content { display: none; margin-top: 10px; padding-left: 15px; border-left: 2px solid #0d6efd; }
+        
+        .badge-type { width: 70px; font-size: 0.7rem; }
+        .toggle-btn { width: 24px; height: 24px; border: 1px solid #ccc; background: #fff; border-radius: 4px; margin-right: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h4>Security Database</h4>
-    <div class="toolbar mb-3">
-        <input type="text" class="form-control d-inline-block w-auto me-2" id="mainSearchInput" placeholder="Search securities...">
-        <button type="button" class="btn btn-primary" id="bulkEditBtn">Bulk Edit Selected</button>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-shield-lock"></i> Security Master: Bulk Operations Interaction Prototype </h4>
+        <button class="btn btn-primary shadow-sm" id="bulkEditBtn" disabled>
+            <i class="bi bi-layout-sidebar-reverse"></i> Bulk Edit Properties
+        </button>
     </div>
-    <div class="type-hint" id="typeHint">Bulk edit requires selecting securities of the same type only.</div>
 
-    <div class="main-container">
-        <div class="list-panel">
-            <table class="table table-striped" id="mainSecuritiesTable">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAll"></th>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Tradable</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr data-type="Equity" data-tradable="On">
-                        <td><input type="checkbox" class="select-checkbox"></td>
-                        <td>001</td>
-                        <td>AAPL</td>
-                        <td>Equity</td>
-                        <td>On</td>
-                    </tr>
-                    <tr data-type="Equity" data-tradable="Off">
-                        <td><input type="checkbox" class="select-checkbox"></td>
-                        <td>002</td>
-                        <td>GOOG</td>
-                        <td>Equity</td>
-                        <td>Off</td>
-                    </tr>
-                    <tr data-type="Index" data-tradable="N/A">
-                        <td><input type="checkbox" class="select-checkbox"></td>
-                        <td>003</td>
-                        <td>SPX</td>
-                        <td>Index</td>
-                        <td>N/A</td>
-                    </tr>
-                    <tr data-type="Index" data-tradable="N/A">
-                        <td><input type="checkbox" class="select-checkbox"></td>
-                        <td>004</td>
-                        <td>NDX</td>
-                        <td>Index</td>
-                        <td>N/A</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="detail-panel" id="detailPanel">
-            <h5 id="detailTitle">Security Details</h5>
-            <form id="singleEditForm"></form>
+    <div class="main-wrapper">
+        <div class="tree-container shadow-sm" id="treeContainer">
+            <div class="tree-row level-stock" data-id="s1" data-level="Equity" data-name="AAPL">
+                <button class="toggle-btn" onclick="toggle('c_s1')">-</button>
+                <input type="checkbox" class="form-check-input select-item me-3">
+                <span class="badge bg-primary badge-type me-2">EQUITY</span> AAPL
+            </div>
+            <div id="c_s1" class="collapse show">
+                <div class="tree-row level-chain" data-id="ch1" data-level="Chain" data-name="AAPL Chain">
+                    <button class="toggle-btn" onclick="toggle('o_ch1')">+</button>
+                    <input type="checkbox" class="form-check-input select-item me-3">
+                    <span class="badge bg-info text-dark badge-type me-2">CHAIN</span> 1AAPL
+                </div>
+                <div id="o_ch1" class="collapse">
+                    <div class="tree-row level-option" data-id="op1" data-level="Option" data-name="AAPL 150C">
+                        <input type="checkbox" class="form-check-input select-item me-3">
+                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 1AAPL 1234567890
+                    </div>
+                </div>
+                <div class="tree-row level-chain" data-id="ch4" data-level="Chain" data-name="AAPL Chain">
+                    <button class="toggle-btn" onclick="toggle('o_ch4')">+</button>
+                    <input type="checkbox" class="form-check-input select-item me-3">
+                    <span class="badge bg-info text-dark badge-type me-2">CHAIN</span> 2AAPL
+                </div>
+                <div id="o_ch4" class="collapse">
+                    <div class="tree-row level-option" data-id="op4" data-level="Option" data-name="AAPL 140C">
+                        <input type="checkbox" class="form-check-input select-item me-3">
+                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 2AAPL 1234567890
+                    </div>
+                </div>
+            </div>
+            <div class="tree-container shadow-sm" id="treeContainer">
+            <div class="tree-row level-stock" data-id="s2" data-level="Equity" data-name="NVDA">
+                <button class="toggle-btn" onclick="toggle('c_s2')">-</button>
+                <input type="checkbox" class="form-check-input select-item me-3">
+                <span class="badge bg-primary badge-type me-2">EQUITY</span> NVDA  
+            </div>
+            <div id="c_s2" class="collapse show">
+                <div class="tree-row level-chain" data-id="ch3" data-level="Chain" data-name="NVDA Chain">
+                    <button class="toggle-btn" onclick="toggle('o_ch3')">+</button>
+                    <input type="checkbox" class="form-check-input select-item me-3">
+                    <span class="badge bg-info text-dark badge-type me-2">CHAIN</span> 1NVDA
+                </div>
+                <div id="o_ch3" class="collapse">
+                    <div class="tree-row level-option" data-id="op3" data-level="Option" data-name="NVDA 150C">
+                        <input type="checkbox" class="form-check-input select-item me-3">
+                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 1NVDA 1234567890
+                    </div>
+                </div>
+            </div>
+ 
+            <div class="tree-row level-index" data-id="i1" data-level="Index" data-name="SPX">
+                <button class="toggle-btn" onclick="toggle('c_i1')">-</button>
+                <input type="checkbox" class="form-check-input select-item me-3">
+                <span class="badge bg-success badge-type me-2">INDEX</span> SPX
+            </div>
+            <div id="c_i1" class="collapse show">
+                <div class="tree-row level-chain" data-id="ch2" data-level="Chain" data-name="SPX Chain">
+                    <button class="toggle-btn" onclick="toggle('o_ch2')">+</button>
+                    <input type="checkbox" class="form-check-input select-item me-3">
+                    <span class="badge bg-info text-dark badge-type me-2">CHAIN</span> 1SPX
+                </div>
+                <div id="o_ch2" class="collapse">
+                    <div class="tree-row level-option" data-id="op2" data-level="Option" data-name="SPX 150C">
+                        <input type="checkbox" class="form-check-input select-item me-3">
+                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 1SPX 1234567890
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Bulk Edit Modal -->
-<div class="modal fade" id="bulkEditModal" tabindex="-1" aria-labelledby="bulkEditModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="bulkEditModalLabel">Bulk Modify Security Attributes</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="offcanvas offcanvas-end offcanvas-edit" tabindex="-1" id="editPanel" aria-labelledby="editPanelLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 id="editPanelLabel"><i class="bi bi-pencil-square"></i> Bulk Edit: <span id="currentTypeLabel" class="text-primary"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body bg-light">
+        <div id="selectedSummary" class="mb-3 small text-muted"></div>
+        
+        <form id="editForm">
+            <div id="fields-container"></div>
+        </form>
+    </div>
+    <div class="offcanvas-footer p-3 border-top bg-white">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+        <button type="button" class="btn btn-primary float-end" onclick="submitChanges()">Apply to Selected</button>
+    </div>
+</div>
+
+<div id="templates" style="display:none">
+    <div id="tpl-equity">
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Tradable</label>
+            <div class="field-sub-content">
+                <select class="form-select"><option>On</option><option>Off</option></select>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-4 left-panel">
-                        <h6>Selected Securities</h6>
-                        <table class="table table-striped table-sm" id="selectedSecuritiesTable">
-                            <thead>
-                                <tr><th>ID</th><th>Name</th><th>Type</th><th>Tradable</th></tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-
-                    <div class="col-md-8 right-panel">
-                        <h6>Select Attributes to Modify</h6>
-
-                        <!-- 属性选择区 -->
-                        <div id="attributeList">
-                            <!-- Routing 始终显示 -->
-                            <div class="form-check">
-                                <input class="form-check-input attribute-check" type="checkbox" id="routingCheck" data-target="routingSection">
-                                <label class="form-check-label" for="routingCheck">Routing (Option Group & Complex Group)</label>
-                            </div>
-
-                            <!-- Equity 专属属性（纯 Index 时隐藏） -->
-                            <div class="equity-only">
-                                <div class="form-check">
-                                    <input class="form-check-input attribute-check" type="checkbox" id="tradableCheck" data-target="tradableSection">
-                                    <label class="form-check-label" for="tradableCheck">Tradable</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input attribute-check" type="checkbox" id="closingOnlyCheck" data-target="closingOnlySection">
-                                    <label class="form-check-label" for="closingOnlyCheck">Closing Only</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input attribute-check" type="checkbox" id="tradingSessionCheck" data-target="tradingSessionSection">
-                                    <label class="form-check-label" for="tradingSessionCheck">Trading Session</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input attribute-check" type="checkbox" id="fractionalCheck" data-target="fractionalSection">
-                                    <label class="form-check-label" for="fractionalCheck">Fractional Setting</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input attribute-check" type="checkbox" id="advThresholdCheck" data-target="advThresholdSection">
-                                    <label class="form-check-label" for="advThresholdCheck">ADV Threshold</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr>
-
-                        <form id="editorForm">
-                            <ul class="nav nav-tabs" id="typeTabs" role="tablist" style="display: none;">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="equity-tab" data-bs-toggle="tab" data-bs-target="#equity">Equity</button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="index-tab" data-bs-toggle="tab" data-bs-target="#index">Index</button>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content" id="typeTabContent">
-                                <!-- Equity Tab -->
-                                <div class="tab-pane fade show active" id="equity" role="tabpanel">
-                                    <div id="tradableSection" class="attribute-section mb-3">
-                                        <label>Tradable</label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="tradableSwitch">
-                                            <label class="form-check-label" for="tradableSwitch">On/Off</label>
-                                        </div>
-                                    </div>
-                                    <div id="closingOnlySection" class="attribute-section mb-3">
-                                        <label>Closing Only</label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" id="closingOnlySwitch">
-                                            <label class="form-check-label" for="closingOnlySwitch">On/Off</label>
-                                        </div>
-                                    </div>
-                                    <div id="tradingSessionSection" class="attribute-section mb-3">
-                                        <label>Trading Session (Multi-select)</label>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="rth"><label for="rth">RTH</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="prePost"><label for="prePost">Pre/Post</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="overnight"><label for="overnight">Overnight</label>
-                                        </div>
-                                    </div>
-                                    <div id="fractionalSection" class="attribute-section accordion mb-3">
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header">
-                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fractionalCollapse">
-                                                    Fractional Setting
-                                                </button>
-                                            </h2>
-                                            <div id="fractionalCollapse" class="accordion-collapse collapse">
-                                                <div class="accordion-body">
-                                                    <div class="mb-3">
-                                                        <label>Fractional Eligible</label>
-                                                        <select class="form-select" id="fractionalEligible">
-                                                            <option>Yes</option><option>No</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3"><label>Fractional Threshold Mid</label><input type="number" class="form-control" id="thresholdMid"></div>
-                                                    <div class="mb-3"><label>Fractional Threshold High</label><input type="number" class="form-control" id="thresholdHigh"></div>
-                                                    <div class="mb-3">
-                                                        <label>Fractional Decimals</label>
-                                                        <select class="form-select" id="fractionalDecimals">
-                                                            <option>1</option><option>2</option><option>3</option><option>4</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div id="advThresholdSection" class="attribute-section accordion mb-3">
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header">
-                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advThresholdCollapse">
-                                                    ADV Threshold
-                                                </button>
-                                            </h2>
-                                            <div id="advThresholdCollapse" class="accordion-collapse collapse">
-                                                <div class="accordion-body">
-                                                    <div class="mb-3"><label>ADV Days</label><select class="form-select" id="advDays"><option>30</option><option>60</option><option>90</option><option>120</option></select></div>
-                                                    <div class="mb-3"><label>ADV Percentage (%)</label><input type="number" class="form-control" id="advPercentage"></div>
-                                                    <div class="mb-3"><label>ADV Alert Level</label><select class="form-select" id="advAlertLevel"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div id="routingSection" class="attribute-section accordion mb-3">
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header">
-                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#routingCollapse">
-                                                    Routing
-                                                </button>
-                                            </h2>
-                                            <div id="routingCollapse" class="accordion-collapse collapse">
-                                                <div class="accordion-body">
-                                                    <div class="mb-3">
-                                                        <label>Option Group</label>
-                                                        <select class="form-select" id="optionGroupEquity">
-                                                            <option>Option Group A</option>
-                                                            <option>Option Group B</option>
-                                                            <option>Option Group C</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label>Complex Group</label>
-                                                        <select class="form-select" id="complexGroupEquity">
-                                                            <option>Complex Group X</option>
-                                                            <option>Complex Group Y</option>
-                                                            <option>Complex Group Z</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Index Tab - 只保留 Routing -->
-                                <div class="tab-pane fade" id="index">
-                                    <div id="routingSectionIndex" class="attribute-section mb-3">
-                                        <div class="mb-3">
-                                            <label>Option Group</label>
-                                            <select class="form-select" id="optionGroupIndex">
-                                                <option>Option Group A</option>
-                                                <option>Option Group B</option>
-                                                <option>Option Group C</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label>Complex Group</label>
-                                            <select class="form-select" id="complexGroupIndex">
-                                                <option>Complex Group X</option>
-                                                <option>Complex Group Y</option>
-                                                <option>Complex Group Z</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-
-                        <button class="btn btn-info mt-3" id="previewBtn">Preview Changes</button>
-                        <div id="previewTable" class="mt-3" style="display: none;">
-                            <h6>Preview of Changes</h6>
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Security</th>
-                                        <th>Attribute</th>
-                                        <th>Current Value</th>
-                                        <th>New Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="previewBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Closing Only</label>
+            <div class="field-sub-content">
+                <select class="form-select"><option>On</option><option>Off</option></select>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="applyBtn">Apply Changes</button>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Trading Session</label>
+            <div class="field-sub-content">
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" value="RTH"> RTH</div>
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" value="PrePost"> Pre/Post</div>
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" value="Overnight"> Overnight</div>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Order Types</label>
+            <div class="field-sub-content">
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Market</div>
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Limit</div>
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> MOC</div>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger text-primary"> Fractional Setting</label>
+            <div class="field-sub-content bg-light p-2 rounded">
+                <div class="mb-2">Eligible: <select class="form-select form-select-sm"><option>Yes</option><option>No</option></select></div>
+                <div class="mb-2">Threshold Mid/High: <div class="d-flex gap-2"><input type="number" class="form-control form-control-sm" placeholder="Mid"><input type="number" class="form-control form-control-sm" placeholder="High"></div></div>
+                <div>Decimals: <select class="form-select form-select-sm"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger text-primary"> ADV Threshold</label>
+            <div class="field-sub-content bg-light p-2 rounded">
+                <div class="mb-2">Days: <select class="form-select form-select-sm"><option>30</option><option>60</option><option>90</option><option>120</option></select></div>
+                <div class="mb-2">Percentage: <input type="number" class="form-control form-control-sm" placeholder="%"></div>
+                <div>Alert Level: <select class="form-select form-select-sm"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Routing & Groups</label>
+            <div class="field-sub-content">
+                <div class="mb-2">Routing Group: <select class="form-select form-select-sm"><option>Group 1</option><option>Group 2</option></select></div>
+                <div class="mb-2">Option Group: <select class="form-select form-select-sm"><option>OG1</option><option>OG2</option></select></div>
+                <div>Complex Group: <select class="form-select form-select-sm"><option>CG1</option><option>CG2</option></select></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tpl-index">
+        <div class="attr-group border-success">
+            <label class="field-label text-success"><input type="checkbox" class="attr-trigger"> Routing Module</label>
+            <div class="field-sub-content">
+                <div class="mb-3"><label class="small">Option Group</label><select class="form-select"><option>Group A</option><option>Group B</option></select></div>
+                <div><label class="small">Complex Group</label><select class="form-select"><option>Group X</option><option>Group Y</option></select></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tpl-chain">
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Tradable (for Chain)</label>
+            <div class="field-sub-content"><select class="form-select"><option>On</option><option>Off</option></select></div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Closing Only (for Chain)</label>
+            <div class="field-sub-content"><select class="form-select"><option>On</option><option>Off</option></select></div>
+        </div>
+    </div>
+
+    <div id="tpl-option">
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Tradable</label>
+            <div class="field-sub-content">
+                <select class="form-select">
+                    <option>On</option>
+                    <option>Off</option>
+                    <option class="text-primary fw-bold">Following Chain</option>
+                </select>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Closing Only</label>
+            <div class="field-sub-content">
+                <select class="form-select">
+                    <option>On</option>
+                    <option>Off</option>
+                    <option class="text-primary fw-bold">Following Chain</option>
+                </select>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Trading Session</label>
+            <div class="field-sub-content">
+                <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled> RTH (Regular Trading Hours)</div>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Order Types</label>
+            <div class="field-sub-content">
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Market</div>
+                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Limit</div>
+            </div>
+        </div>
+        <div class="attr-group">
+            <label class="field-label"><input type="checkbox" class="attr-trigger"> Routing Group</label>
+            <div class="field-sub-content">
+                <select class="form-select"><option>RG1</option><option>RG2</option></select>
             </div>
         </div>
     </div>
@@ -310,155 +257,84 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let selectedType = null;
+    let selectedLevel = null;
+    let selectedCount = 0;
 
-    const bulkEditBtn = document.getElementById('bulkEditBtn');
-    const selectAll = document.getElementById('selectAll');
-    const mainTable = document.getElementById('mainSecuritiesTable');
-    const typeHint = document.getElementById('typeHint');
-    const modal = document.getElementById('bulkEditModal');
-    const selectedTableBody = document.getElementById('selectedSecuritiesTable').querySelector('tbody');
-    const previewBtn = document.getElementById('previewBtn');
-    const applyBtn = document.getElementById('applyBtn');
-    const previewBody = document.getElementById('previewBody');
-    const typeTabs = document.getElementById('typeTabs');
-    const equityOnlyAttrs = document.querySelector('.equity-only');
+    // 切换折叠
+    function toggle(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('show');
+    }
 
-    function updateTypeRestriction() {
-        const checked = mainTable.querySelectorAll('.select-checkbox:checked');
-        if (checked.length === 0) {
-            selectedType = null;
-            typeHint.textContent = "Bulk edit requires selecting securities of the same type only.";
-            mainTable.querySelectorAll('tbody tr').forEach(row => row.classList.remove('disabled'));
-            selectAll.disabled = false;
-            return;
-        }
+    // 核心逻辑：选择与排他性
+    document.querySelectorAll('.select-item').forEach(cb => {
+        cb.addEventListener('change', function() {
+            const row = this.closest('.tree-row');
+            const level = row.dataset.level;
 
-        if (!selectedType) {
-            selectedType = checked[0].closest('tr').dataset.type;
-            typeHint.textContent = `Selected type: ${selectedType}`;
-        }
+            if (this.checked) {
+                if (!selectedLevel) selectedLevel = level;
+                selectedCount++;
+            } else {
+                selectedCount--;
+                if (selectedCount === 0) selectedLevel = null;
+            }
 
-        mainTable.querySelectorAll('tbody tr').forEach(row => {
-            if (row.dataset.type !== selectedType) {
+            updateView();
+        });
+    });
+
+    function updateView() {
+        // 更新 UI 禁用状态
+        document.querySelectorAll('.tree-row').forEach(row => {
+            if (selectedLevel && row.dataset.level !== selectedLevel) {
                 row.classList.add('disabled');
-                const cb = row.querySelector('.select-checkbox');
-                if (cb) cb.checked = false;
+                row.querySelector('.select-item').disabled = true;
             } else {
                 row.classList.remove('disabled');
+                row.querySelector('.select-item').disabled = false;
             }
         });
 
-        selectAll.checked = Array.from(mainTable.querySelectorAll('tr:not(.disabled) .select-checkbox')).every(cb => cb.checked);
+        // 批量按钮状态
+        document.getElementById('bulkEditBtn').disabled = selectedCount === 0;
     }
 
-    mainTable.querySelectorAll('.select-checkbox').forEach(cb => cb.addEventListener('change', updateTypeRestriction));
+    // 打开右侧面板
+    document.getElementById('bulkEditBtn').addEventListener('click', () => {
+        const typeLabel = document.getElementById('currentTypeLabel');
+        const fieldsContainer = document.getElementById('fields-container');
+        const summary = document.getElementById('selectedSummary');
 
-    selectAll.addEventListener('change', function() {
-        if (this.checked) {
-            mainTable.querySelectorAll('tr:not(.disabled) .select-checkbox').forEach(cb => cb.checked = true);
-        } else {
-            mainTable.querySelectorAll('.select-checkbox').forEach(cb => cb.checked = false);
-        }
-        updateTypeRestriction();
-    });
+        typeLabel.innerText = selectedLevel;
+        summary.innerText = `Preparing to update ${selectedCount} ${selectedLevel} units. Only checked attributes will be applied.`;
+        
+        // 根据 Level 加载模板
+        let tplId = '';
+        if (selectedLevel === 'Equity') tplId = 'tpl-equity';
+        else if (selectedLevel === 'Index') tplId = 'tpl-index';
+        else if (selectedLevel === 'Chain') tplId = 'tpl-chain';
+        else if (selectedLevel === 'Option') tplId = 'tpl-option';
 
-    document.getElementById('mainSearchInput').addEventListener('input', function() {
-        const filter = this.value.toLowerCase();
-        mainTable.querySelectorAll('tbody tr').forEach(row => {
-            const matches = row.textContent.toLowerCase().includes(filter);
-            row.style.display = matches ? '' : 'none';
-            if (!matches && row.querySelector('.select-checkbox').checked) {
-                row.querySelector('.select-checkbox').checked = false;
-            }
-        });
-        updateTypeRestriction();
-    });
+        fieldsContainer.innerHTML = document.getElementById(tplId).innerHTML;
 
-    bulkEditBtn.addEventListener('click', function() {
-        const selected = mainTable.querySelectorAll('.select-checkbox:checked');
-        if (selected.length === 0) return alert('Please select at least one security.');
-
-        const types = new Set(Array.from(selected).map(cb => cb.closest('tr').dataset.type));
-        if (types.size > 1) {
-            alert('Bulk edit is only allowed for securities of the same type.\nPlease deselect securities from other types.');
-            return;
-        }
-
-        selectedTableBody.innerHTML = '';
-        selected.forEach(cb => {
-            const clone = cb.closest('tr').cloneNode(true);
-            clone.querySelector('.select-checkbox')?.remove();
-            selectedTableBody.appendChild(clone);
-        });
-
-        const isPureIndex = types.has('Index');
-        equityOnlyAttrs.style.display = isPureIndex ? 'none' : 'block';
-
-        // 关键修复：每次打开弹窗，重置所有 checkbox 和 section 状态
-        document.querySelectorAll('.attribute-check').forEach(checkbox => {
-            checkbox.checked = false;
-        });
-        document.querySelectorAll('.attribute-section').forEach(section => {
-            section.style.display = 'none';
-        });
-
-        const modalInstance = new bootstrap.Modal(modal);
-        modalInstance.show();
-        checkSecurityTypes();
-    });
-
-    function checkSecurityTypes() {
-        const types = new Set();
-        selectedTableBody.querySelectorAll('tr').forEach(row => types.add(row.dataset.type));
-        typeTabs.style.display = types.size > 1 ? 'block' : 'none';
-    }
-
-    document.querySelectorAll('.attribute-check').forEach(check => {
-        check.addEventListener('change', function() {
-            const section = document.getElementById(this.dataset.target);
-            if (section) section.style.display = this.checked ? 'block' : 'none';
-        });
-    });
-
-    previewBtn.addEventListener('click', function() {
-        previewBody.innerHTML = '';
-        const rows = selectedTableBody.querySelectorAll('tr');
-        const checked = document.querySelectorAll('.attribute-check:checked');
-
-        rows.forEach(row => {
-            checked.forEach(chk => {
-                const attr = chk.id.replace('Check', '');
-                let newVal = 'N/A';
-                if (attr === 'routing') {
-                    const og = document.getElementById('optionGroupEquity')?.value || document.getElementById('optionGroupIndex')?.value || '—';
-                    const cg = document.getElementById('complexGroupEquity')?.value || document.getElementById('complexGroupIndex')?.value || '—';
-                    newVal = `Option Group: ${og}, Complex Group: ${cg}`;
-                }
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.cells[1].textContent}</td>
-                    <td>${attr}</td>
-                    <td>${row.dataset[attr.toLowerCase()] || '—'}</td>
-                    <td>${newVal}</td>
-                `;
-                previewBody.appendChild(tr);
+        // 绑定字段激活事件
+        fieldsContainer.querySelectorAll('.attr-trigger').forEach(trigger => {
+            trigger.addEventListener('change', function() {
+                const sub = this.closest('.attr-group').querySelector('.field-sub-content');
+                sub.style.display = this.checked ? 'block' : 'none';
             });
         });
 
-        document.getElementById('previewTable').style.display = previewBody.children.length ? 'block' : 'none';
+        const panel = new bootstrap.Offcanvas(document.getElementById('editPanel'));
+        panel.show();
     });
 
-    applyBtn.addEventListener('click', function() {
-        alert('Changes applied successfully! (Simulated)');
-        bootstrap.Modal.getInstance(modal).hide();
-        selectedType = null;
-        updateTypeRestriction();
-    });
-
-    updateTypeRestriction();
-});
+    function submitChanges() {
+        alert("Success! The selected attributes have been pushed to the security database.");
+        bootstrap.Offcanvas.getInstance(document.getElementById('editPanel')).hide();
+    }
 </script>
+
 </body>
 </html>
