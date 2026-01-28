@@ -17,8 +17,16 @@
             transition: background 0.2s;
         }
         .tree-row:hover { background-color: #f8f9fa; }
-        .tree-row.disabled { opacity: 0.4; pointer-events: none; background-color: #f1f1f1; }
-        
+        .tree-row.row-locked { background-color: #f9f9f9; }
+        /* 仅让复选框和文字内容变灰，但不影响按钮 */
+        .tree-row.row-locked .select-item, 
+        .tree-row.row-locked .badge, 
+        .tree-row.row-locked span { 
+            opacity: 0.3; 
+        }
+        /* 明确让复选框在禁用状态下不可点击 */
+        .select-item:disabled { cursor: not-allowed; }
+
         /* 层级缩进 */
         .level-stock, .level-index { font-weight: bold; }
         .level-chain { padding-left: 40px; border-left: 4px solid #0d6efd; background: #fcfdfe; }
@@ -285,18 +293,21 @@
     });
 
     function updateView() {
-        // 更新 UI 禁用状态
         document.querySelectorAll('.tree-row').forEach(row => {
+            const checkbox = row.querySelector('.select-item');
+            
             if (selectedLevel && row.dataset.level !== selectedLevel) {
-                row.classList.add('disabled');
-                row.querySelector('.select-item').disabled = true;
+                // 属于异级资产，锁定复选框
+                row.classList.add('row-locked');
+                checkbox.disabled = true;
+                checkbox.checked = false; // 安全起见清空非同级勾选
             } else {
-                row.classList.remove('disabled');
-                row.querySelector('.select-item').disabled = false;
+                // 同级或未选状态，解锁
+                row.classList.remove('row-locked');
+                checkbox.disabled = false;
             }
         });
 
-        // 批量按钮状态
         document.getElementById('bulkEditBtn').disabled = selectedCount === 0;
     }
 
