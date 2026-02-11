@@ -40,6 +40,156 @@
         .badge-follow { background-color: #e7f1ff; color: #0d6efd; border: 1px solid #b6d4fe; font-size: 0.75rem; }
         
         .toggle-btn { width: 24px; height: 24px; border: 1px solid #ccc; background: #fff; border-radius: 4px; margin-right: 10px; }
+
+        /* 确认弹窗样式 */
+        .confirm-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .confirm-modal-overlay.show {
+            display: flex;
+        }
+        .confirm-modal-container {
+            width: 480px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+            border: 1px solid #d9d9d9;
+            overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .confirm-modal-header {
+            padding: 16px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+        .confirm-modal-header h3 { margin: 0; font-size: 16px; color: #1f1f1f; }
+        .warning-icon { color: #faad14; margin-right: 8px; font-size: 18px; }
+        
+        .confirm-modal-content { padding: 20px; }
+        .summary-info {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #003a8c;
+        }
+        .summary-info strong { font-size: 16px; margin: 0 4px; }
+        
+        .change-list { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .change-list th { text-align: left; font-size: 12px; color: #8c8c8c; padding: 8px 4px; border-bottom: 2px solid #f0f0f0; }
+        .change-list td { padding: 10px 4px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+        .attr-name { font-weight: 600; color: #595959; }
+        .target-value { font-family: "SFMono-Regular", Consolas, monospace; color: #096dd9; background: #f0f5ff; padding: 2px 6px; border-radius: 3px; }
+        
+        .edit-reason-container { margin-top: 20px; }
+        .edit-reason-label {
+            font-size: 14px;
+            color: #262626;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .edit-reason-label .required {
+            color: #ff4d4f;
+            margin-right: 4px;
+        }
+        .edit-reason-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+        .edit-reason-input::placeholder { color: #bfbfbf; }
+        .edit-reason-input:focus {
+            outline: none;
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+        }
+        .char-count {
+            text-align: right;
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+        
+        .audit-note {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #8c8c8c;
+            background: #f5f5f5;
+            padding: 10px;
+            border-left: 4px solid #d9d9d9;
+        }
+        
+        .error-message {
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            border-left: 4px solid #ff4d4f;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.6;
+            display: none;
+        }
+        .error-message .error-title {
+            color: #cf1322;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .error-icon { margin-right: 6px; font-size: 14px; }
+        .error-details { color: #8c8c8c; margin-top: 4px; }
+        .error-field {
+            color: #ff4d4f;
+            font-weight: 500;
+            font-family: "SFMono-Regular", Consolas, monospace;
+            background: #fff;
+            padding: 1px 4px;
+            border-radius: 2px;
+            border: 1px solid #ffccc7;
+        }
+        
+        .confirm-modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #f0f0f0;
+            text-align: right;
+            background: #fafafa;
+        }
+        .confirm-btn {
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid #d9d9d9;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+        .confirm-btn-cancel { background: #fff; color: #595959; }
+        .confirm-btn-confirm { background: #1890ff; color: #fff; border-color: #1890ff; }
+        .confirm-btn-confirm:hover { background: #40a9ff; border-color: #40a9ff; }
+        .confirm-btn-confirm:disabled { background: #f5f5f5; color: #bfbfbf; border-color: #d9d9d9; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -81,6 +231,7 @@
     </div>
 </div>
 
+<!-- 批量编辑面板 -->
 <div class="offcanvas offcanvas-end offcanvas-edit" tabindex="-1" id="editPanel">
     <div class="offcanvas-header border-bottom bg-white sticky-top">
         <h5 id="editPanelLabel"><i class="bi bi-pencil-square"></i> Bulk Edit: <span id="currentTypeLabel" class="text-primary"></span></h5>
@@ -96,11 +247,78 @@
         <span class="text-muted small align-self-center">* Only active (checked) items will be updated.</span>
         <div>
             <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="offcanvas">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="submitChanges()">Apply to Selected</button>
+            <button type="button" class="btn btn-primary" onclick="showConfirmModal()">Apply to Selected</button>
         </div>
     </div>
 </div>
 
+<!-- 确认弹窗 -->
+<div class="confirm-modal-overlay" id="confirmModalOverlay">
+    <div class="confirm-modal-container">
+        <div class="confirm-modal-header">
+            <span class="warning-icon">⚠️</span>
+            <h3>Confirm Bulk Edit</h3>
+        </div>
+        
+        <div class="confirm-modal-content">
+            <div class="summary-info" id="confirmSummary">
+                You are applying changes to <strong id="confirmCount">0</strong> selected <strong id="confirmType">Item(s)</strong>.
+            </div>
+
+            <table class="change-list">
+                <thead>
+                    <tr>
+                        <th>ATTRIBUTE</th>
+                        <th>NEW VALUE</th>
+                    </tr>
+                </thead>
+                <tbody id="changeListBody">
+                </tbody>
+            </table>
+
+            <div class="edit-reason-container">
+                <label class="edit-reason-label">
+                    <span class="required">*</span>Edit Reason
+                </label>
+                <textarea 
+                    class="edit-reason-input" 
+                    placeholder="Input"
+                    maxlength="500"
+                    id="editReason"
+                    oninput="updateCharCount()"
+                ></textarea>
+                <div class="char-count">
+                    <span id="charCount">0</span> / 500
+                </div>
+            </div>
+
+            <div class="audit-note">
+                <strong>Execution Note:</strong> Changes will be processed individually. 
+                The <em>Last Updated</em> timestamp in the Audit Trail will reflect the exact millisecond each symbol is committed to the database.
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                <div class="error-title">
+                    <span class="error-icon">❌</span>
+                    Operation Failed
+                </div>
+                <div>
+                    <strong>Error:</strong> Validation failed for 18 symbols
+                </div>
+                <div class="error-details">
+                    Failed fields: <span class="error-field">Alert Level</span>, <span class="error-field">Order Types</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="confirm-modal-footer">
+            <button class="confirm-btn confirm-btn-cancel" onclick="hideConfirmModal()">Cancel</button>
+            <button class="confirm-btn confirm-btn-confirm" id="confirmBtn" disabled onclick="handleConfirm()">Confirm & Apply</button>
+        </div>
+    </div>
+</div>
+
+<!-- 模板区域 -->
 <div id="templates" style="display:none">
     <div id="tpl-equity">
         <div class="module-card">
@@ -328,6 +546,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         <div class="module-card">
             <div class="module-header"><i class="bi bi-geo"></i> Routing</div>
             <div class="attr-item">
@@ -346,7 +565,9 @@
     let selectedLevel = null;
     let selectedCount = 0;
 
-    function toggle(id) { document.getElementById(id).classList.toggle('show'); }
+    function toggle(id) { 
+        document.getElementById(id).classList.toggle('show'); 
+    }
 
     // 选择与互斥逻辑
     document.querySelectorAll('.select-item').forEach(cb => {
@@ -412,10 +633,122 @@
         }
     }
 
-    function submitChanges() {
-        alert("Success! Values pushed to database.");
-        bootstrap.Offcanvas.getInstance(document.getElementById('editPanel')).hide();
+    // 显示确认弹窗
+    function showConfirmModal() {
+        // 收集已激活的修改项
+        const activeItems = document.querySelectorAll('.attr-item.active');
+        
+        if (activeItems.length === 0) {
+            alert('Please select at least one attribute to update.');
+            return;
+        }
+
+        // 更新弹窗中的统计信息
+        document.getElementById('confirmCount').textContent = selectedCount;
+        document.getElementById('confirmType').textContent = selectedLevel + '(s)';
+        
+        // 生成变更列表
+        const changeListBody = document.getElementById('changeListBody');
+        changeListBody.innerHTML = '';
+        
+        activeItems.forEach(item => {
+            const label = item.querySelector('.attr-label');
+            if (!label) return;
+            
+            let value = '';
+            const select = item.querySelector('select');
+            const input = item.querySelector('input[type="number"]');
+            const switchInput = item.querySelector('input[type="checkbox"][role="switch"]');
+            const checkboxes = item.querySelectorAll('.form-check-input[type="checkbox"]:not(.attr-checkbox):not([role="switch"])');
+            
+            if (select) {
+                value = select.options[select.selectedIndex].text;
+            } else if (switchInput) {
+                value = switchInput.checked ? 'On' : 'Off';
+            } else if (input) {
+                value = input.value;
+            } else if (checkboxes.length > 0) {
+                const checked = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.nextElementSibling.textContent.trim())
+                    .join(', ');
+                value = checked || 'None';
+            }
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="attr-name">${label.textContent}</td>
+                <td><span class="target-value">${value}</span></td>
+            `;
+            changeListBody.appendChild(row);
+        });
+        
+        // 重置编辑原因和字符计数
+        document.getElementById('editReason').value = '';
+        document.getElementById('charCount').textContent = '0';
+        document.getElementById('confirmBtn').disabled = true;
+        document.getElementById('errorMessage').style.display = 'none';
+        
+        // 显示弹窗
+        document.getElementById('confirmModalOverlay').classList.add('show');
     }
+
+    // 隐藏确认弹窗
+    function hideConfirmModal() {
+        document.getElementById('confirmModalOverlay').classList.remove('show');
+    }
+
+    // 更新字符计数
+    function updateCharCount() {
+        const textarea = document.getElementById('editReason');
+        const charCount = document.getElementById('charCount');
+        const confirmBtn = document.getElementById('confirmBtn');
+        
+        charCount.textContent = textarea.value.length;
+        
+        // 只有输入内容后才能点击确认按钮
+        if (textarea.value.trim().length > 0) {
+            confirmBtn.disabled = false;
+        } else {
+            confirmBtn.disabled = true;
+        }
+    }
+
+    // 确认并应用更改
+    function handleConfirm() {
+        const reason = document.getElementById('editReason').value.trim();
+        if (!reason) {
+            alert('Please input edit reason');
+            return;
+        }
+        
+        // 这里可以添加实际的提交逻辑
+        console.log('Edit Reason:', reason);
+        console.log('Selected Level:', selectedLevel);
+        console.log('Selected Count:', selectedCount);
+        
+        // 成功后隐藏弹窗
+        hideConfirmModal();
+        
+        // 关闭编辑面板
+        bootstrap.Offcanvas.getInstance(document.getElementById('editPanel')).hide();
+        
+        // 显示成功消息
+        alert("Success! Values pushed to database.");
+        
+        // 可选：重置选择
+        document.querySelectorAll('.select-item:checked').forEach(cb => cb.checked = false);
+        selectedCount = 0;
+        selectedLevel = null;
+        updateTreeView();
+    }
+
+    // 点击遮罩层关闭弹窗
+    document.getElementById('confirmModalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideConfirmModal();
+        }
+    });
 </script>
 
 </body>
