@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Management - Side Panel Edit</title>
+    <title>Security Management - Professional Bulk Edit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
@@ -12,33 +12,33 @@
         
         /* 树形列表样式 */
         .tree-container { flex: 1; background: white; border-radius: 8px; border: 1px solid #dee2e6; overflow: hidden; }
-        .tree-row { 
-            display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee;
-            transition: background 0.2s;
-        }
+        .tree-row { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; transition: background 0.2s; }
         .tree-row:hover { background-color: #f8f9fa; }
         .tree-row.row-locked { background-color: #f9f9f9; }
-        /* 仅让复选框和文字内容变灰，但不影响按钮 */
-        .tree-row.row-locked .select-item, 
-        .tree-row.row-locked .badge, 
-        .tree-row.row-locked span { 
-            opacity: 0.3; 
-        }
-        /* 明确让复选框在禁用状态下不可点击 */
+        .tree-row.row-locked .select-item, .tree-row.row-locked .badge, .tree-row.row-locked span { opacity: 0.3; }
         .select-item:disabled { cursor: not-allowed; }
 
-        /* 层级缩进 */
         .level-stock, .level-index { font-weight: bold; }
         .level-chain { padding-left: 40px; border-left: 4px solid #0d6efd; background: #fcfdfe; }
         .level-option { padding-left: 80px; border-left: 4px solid #6c757d; }
 
-        /* 右侧滑出面板定制 */
-        .offcanvas-edit { width: 550px !important; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
-        .attr-group { border: 1px solid #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #fff; }
-        .field-label { font-weight: 600; color: #495057; display: block; margin-bottom: 8px; }
-        .field-sub-content { display: none; margin-top: 10px; padding-left: 15px; border-left: 2px solid #0d6efd; }
+        /* 右侧面板 - 属性激活逻辑样式 */
+        .offcanvas-edit { width: 600px !important; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
+        .module-card { background: #fff; border: 1px solid #e0e6ed; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        .module-header { background: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #e0e6ed; font-weight: bold; color: #333; display: flex; align-items: center; }
+        .module-header i { margin-right: 8px; color: #0d6efd; }
         
-        .badge-type { width: 70px; font-size: 0.7rem; }
+        .attr-item { display: flex; padding: 12px 15px; border-bottom: 1px solid #f1f3f5; align-items: flex-start; transition: all 0.2s; }
+        .attr-item:last-child { border-bottom: none; }
+        .attr-checkbox { margin-top: 4px; width: 18px; height: 18px; cursor: pointer; }
+        
+        .attr-content { flex: 1; margin-left: 15px; opacity: 0.4; pointer-events: none; transition: opacity 0.2s; }
+        .attr-item.active { background-color: #fff; }
+        .attr-item.active .attr-content { opacity: 1; pointer-events: auto; }
+        
+        .attr-label { font-size: 0.9rem; font-weight: 600; color: #495057; margin-bottom: 5px; display: block; }
+        .badge-follow { background-color: #e7f1ff; color: #0d6efd; border: 1px solid #b6d4fe; font-size: 0.75rem; }
+        
         .toggle-btn { width: 24px; height: 24px; border: 1px solid #ccc; background: #fff; border-radius: 4px; margin-right: 10px; }
     </style>
 </head>
@@ -46,7 +46,7 @@
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4><i class="bi bi-shield-lock"></i> Security Master: Bulk Operations Interaction Prototype </h4>
+        <h4><i class="bi bi-shield-lock"></i> Security Master: Bulk Operations Interaction </h4>
         <button class="btn btn-primary shadow-sm" id="bulkEditBtn" disabled>
             <i class="bi bi-layout-sidebar-reverse"></i> Bulk Edit Properties
         </button>
@@ -68,196 +68,274 @@
                 <div id="o_ch1" class="collapse">
                     <div class="tree-row level-option" data-id="op1" data-level="Option" data-name="AAPL 150C">
                         <input type="checkbox" class="form-check-input select-item me-3">
-                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 1AAPL 1234567890
-                    </div>
-                </div>
-                <div class="tree-row level-chain" data-id="ch4" data-level="Chain" data-name="AAPL Chain">
-                    <button class="toggle-btn" onclick="toggle('o_ch4')">+</button>
-                    <input type="checkbox" class="form-check-input select-item me-3">
-                    <span class="badge bg-info text-dark badge-type me-2">CHAIN</span> 2AAPL
-                </div>
-                <div id="o_ch4" class="collapse">
-                    <div class="tree-row level-option" data-id="op4" data-level="Option" data-name="AAPL 140C">
-                        <input type="checkbox" class="form-check-input select-item me-3">
-                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 2AAPL 1234567890
+                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 1AAPL 150C
                     </div>
                 </div>
             </div>
-            <div class="tree-container shadow-sm" id="treeContainer">
-            <div class="tree-row level-stock" data-id="s2" data-level="Equity" data-name="NVDA">
-                <button class="toggle-btn" onclick="toggle('c_s2')">-</button>
-                <input type="checkbox" class="form-check-input select-item me-3">
-                <span class="badge bg-primary badge-type me-2">EQUITY</span> NVDA  
-            </div>
-            <div id="c_s2" class="collapse show">
-                <div class="tree-row level-chain" data-id="ch3" data-level="Chain" data-name="NVDA Chain">
-                    <button class="toggle-btn" onclick="toggle('o_ch3')">+</button>
-                    <input type="checkbox" class="form-check-input select-item me-3">
-                    <span class="badge bg-info text-dark badge-type me-2">CHAIN</span> 1NVDA
-                </div>
-                <div id="o_ch3" class="collapse">
-                    <div class="tree-row level-option" data-id="op3" data-level="Option" data-name="NVDA 150C">
-                        <input type="checkbox" class="form-check-input select-item me-3">
-                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 1NVDA 1234567890
-                    </div>
-                </div>
-            </div>
- 
             <div class="tree-row level-index" data-id="i1" data-level="Index" data-name="SPX">
                 <button class="toggle-btn" onclick="toggle('c_i1')">-</button>
                 <input type="checkbox" class="form-check-input select-item me-3">
                 <span class="badge bg-success badge-type me-2">INDEX</span> SPX
             </div>
-            <div id="c_i1" class="collapse show">
-                <div class="tree-row level-chain" data-id="ch2" data-level="Chain" data-name="SPX Chain">
-                    <button class="toggle-btn" onclick="toggle('o_ch2')">+</button>
-                    <input type="checkbox" class="form-check-input select-item me-3">
-                    <span class="badge bg-info text-dark badge-type me-2">CHAIN</span> 1SPX
-                </div>
-                <div id="o_ch2" class="collapse">
-                    <div class="tree-row level-option" data-id="op2" data-level="Option" data-name="SPX 150C">
-                        <input type="checkbox" class="form-check-input select-item me-3">
-                        <span class="badge bg-secondary badge-type me-2">OPTION</span> 1SPX 1234567890
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
-<div class="offcanvas offcanvas-end offcanvas-edit" tabindex="-1" id="editPanel" aria-labelledby="editPanelLabel">
-    <div class="offcanvas-header border-bottom">
+<div class="offcanvas offcanvas-end offcanvas-edit" tabindex="-1" id="editPanel">
+    <div class="offcanvas-header border-bottom bg-white sticky-top">
         <h5 id="editPanelLabel"><i class="bi bi-pencil-square"></i> Bulk Edit: <span id="currentTypeLabel" class="text-primary"></span></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body bg-light">
-        <div id="selectedSummary" class="mb-3 small text-muted"></div>
-        
+        <div id="selectedSummary" class="alert alert-info py-2 small mb-3"></div>
         <form id="editForm">
             <div id="fields-container"></div>
         </form>
     </div>
-    <div class="offcanvas-footer p-3 border-top bg-white">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
-        <button type="button" class="btn btn-primary float-end" onclick="submitChanges()">Apply to Selected</button>
+    <div class="offcanvas-footer p-3 border-top bg-white d-flex justify-content-between">
+        <span class="text-muted small align-self-center">* Only active (checked) items will be updated.</span>
+        <div>
+            <button type="button" class="btn btn-outline-secondary me-2" data-bs-dismiss="offcanvas">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="submitChanges()">Apply to Selected</button>
+        </div>
     </div>
 </div>
 
 <div id="templates" style="display:none">
     <div id="tpl-equity">
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Tradable</label>
-            <div class="field-sub-content">
-                <select class="form-select"><option>On</option><option>Off</option></select>
+        <div class="module-card">
+            <div class="module-header"><i class="bi bi-graph-up-arrow"></i> Trading</div>
+                <div class="attr-item d-flex align-items-center mb-2">
+                    <input type="checkbox" class="form-check-input attr-checkbox me-3" id="activate-tradable">
+                    
+                    <div class="attr-content d-flex justify-content-between align-items-center flex-grow-1">
+                        <label class="attr-label mb-0" for="activate-tradable">Tradable</label>
+                        
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="switch-tradable" disabled>
+                            <label class="form-check-label" for="switch-tradable"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="attr-item d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input attr-checkbox me-3" id="activate-closing">
+                    
+                    <div class="attr-content d-flex justify-content-between align-items-center flex-grow-1">
+                        <label class="attr-label mb-0" for="activate-closing">Closing Only</label>
+                        
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="switch-closing" disabled>
+                            <label class="form-check-label" for="switch-closing"></label>
+                        </div>
+                    </div>
+                </div>
+
+    
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Trading Session</label>
+                    <div class="d-flex gap-2 mt-1">
+                        <div class="form-check"><input class="form-check-input" type="checkbox" checked> <small>RTH</small></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox"> <small>Pre/Post</small></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox"> <small>Overnight</small></div>
+                    </div>
+                </div>
+            </div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Order Type</label>
+                    <div class="d-flex gap-2 mt-1">
+                        <div class="form-check"><input class="form-check-input" type="checkbox" checked> <small>Market</small></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox"> <small>Limit</small></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox"> <small>LOC</small></div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Closing Only</label>
-            <div class="field-sub-content">
-                <select class="form-select"><option>On</option><option>Off</option></select>
+
+        <div class="module-card">
+            <div class="module-header"><i class="bi bi-pie-chart"></i> Fractional Setting</div>
+            <div class="attr-item" id="fractional-master">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Eligible (Y/N)</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="eligSwitch" onchange="toggleFractionalSub(this.checked)">
+                    </div>
+                    <div id="fractional-subs" class="mt-3 ps-2 border-start border-2" style="opacity: 0.5; pointer-events: none;">
+                        <div class="mb-2">
+                            <small class="text-muted">Threshold (Mid/High)</small>
+                            <div class="d-flex gap-2"><input type="number" class="form-control form-control-sm" value="1"><input type="number" class="form-control form-control-sm" value="2"></div>
+                        </div>
+                        <div>
+                            <small class="text-muted">Decimals (1-4)</small>
+                            <select class="form-select form-select-sm"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Trading Session</label>
-            <div class="field-sub-content">
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" value="RTH"> RTH</div>
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" value="PrePost"> Pre/Post</div>
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox" value="Overnight"> Overnight</div>
+
+        <div class="module-card">
+            <div class="module-header"><i class="bi bi-speedometer2"></i> ADV Threshold</div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">ADV Days</label>
+                    <select class="form-select form-select-sm"><option>1</option><option selected>30</option><option>60</option><option>90</option><option>120</option></select>
+                </div>
+            </div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">ADV Percentage</label>
+                    <div class="input-group input-group-sm"><input type="number" class="form-control" placeholder="Input %"><span class="input-group-text">%</span></div>
+                </div>
+            </div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Alert Level</label>
+                    <select class="form-select form-select-sm"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+                </div>
             </div>
         </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Order Types</label>
-            <div class="field-sub-content">
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Market</div>
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Limit</div>
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> MOC</div>
+
+        <div class="module-card">
+            <div class="module-header"><i class="bi bi-diagram-3"></i> Routing</div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Routing Group</label>
+                    <select class="form-select form-select-sm"><option>Group A</option><option>Group B</option></select>
+                </div>
             </div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger text-primary"> Fractional Setting</label>
-            <div class="field-sub-content bg-light p-2 rounded">
-                <div class="mb-2">Eligible: <select class="form-select form-select-sm"><option>Yes</option><option>No</option></select></div>
-                <div class="mb-2">Threshold Mid/High: <div class="d-flex gap-2"><input type="number" class="form-control form-control-sm" placeholder="Mid"><input type="number" class="form-control form-control-sm" placeholder="High"></div></div>
-                <div>Decimals: <select class="form-select form-select-sm"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Option Group</label>
+                    <select class="form-select form-select-sm"><option>OG_01</option><option>OG_02</option></select>
+                </div>
             </div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger text-primary"> ADV Threshold</label>
-            <div class="field-sub-content bg-light p-2 rounded">
-                <div class="mb-2">Days: <select class="form-select form-select-sm"><option>30</option><option>60</option><option>90</option><option>120</option></select></div>
-                <div class="mb-2">Percentage: <input type="number" class="form-control form-control-sm" placeholder="%"></div>
-                <div>Alert Level: <select class="form-select form-select-sm"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
-            </div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Routing & Groups</label>
-            <div class="field-sub-content">
-                <div class="mb-2">Routing Group: <select class="form-select form-select-sm"><option>Group 1</option><option>Group 2</option></select></div>
-                <div class="mb-2">Option Group: <select class="form-select form-select-sm"><option>OG1</option><option>OG2</option></select></div>
-                <div>Complex Group: <select class="form-select form-select-sm"><option>CG1</option><option>CG2</option></select></div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Complex Group</label>
+                    <select class="form-select form-select-sm"><option>OG_01</option><option>OG_02</option></select>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="tpl-index">
-        <div class="attr-group border-success">
-            <label class="field-label text-success"><input type="checkbox" class="attr-trigger"> Routing Module</label>
-            <div class="field-sub-content">
-                <div class="mb-3"><label class="small">Option Group</label><select class="form-select"><option>Group A</option><option>Group B</option></select></div>
-                <div><label class="small">Complex Group</label><select class="form-select"><option>Group X</option><option>Group Y</option></select></div>
+        <div class="module-card">
+            <div class="module-header"><i class="bi bi-diagram-3"></i> Routing</div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Routing Group</label>
+                    <select class="form-select form-select-sm"><option>Group A</option><option>Group B</option></select>
+                </div>
+            </div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Option Group</label>
+                    <select class="form-select form-select-sm"><option>OG_01</option><option>OG_02</option></select>
+                </div>
+            </div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Complex Group</label>
+                    <select class="form-select form-select-sm"><option>OG_01</option><option>OG_02</option></select>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="tpl-chain">
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Tradable (for Chain)</label>
-            <div class="field-sub-content"><select class="form-select"><option>On</option><option>Off</option></select></div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Closing Only (for Chain)</label>
-            <div class="field-sub-content"><select class="form-select"><option>On</option><option>Off</option></select></div>
-        </div>
+        <div class="attr-item d-flex align-items-center mb-2">
+                    <input type="checkbox" class="form-check-input attr-checkbox me-3" id="activate-tradable">
+                    
+                    <div class="attr-content d-flex justify-content-between align-items-center flex-grow-1">
+                        <label class="attr-label mb-0" for="activate-tradable">Chain Tradable</label>
+                        
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="switch-tradable" disabled>
+                            <label class="form-check-label" for="switch-tradable"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="attr-item d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input attr-checkbox me-3" id="activate-closing">
+                    
+                    <div class="attr-content d-flex justify-content-between align-items-center flex-grow-1">
+                        <label class="attr-label mb-0" for="activate-closing">Chain Closing Only</label>
+                        
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="switch-closing" disabled>
+                            <label class="form-check-label" for="switch-closing"></label>
+                        </div>
+                    </div>
+                </div>
+
     </div>
 
     <div id="tpl-option">
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Tradable</label>
-            <div class="field-sub-content">
-                <select class="form-select">
-                    <option>On</option>
-                    <option>Off</option>
-                    <option class="text-primary fw-bold">Following Chain</option>
-                </select>
+        <div class="module-card">
+            <div class="module-header"><i class="bi bi-file-earmark-binary"></i> Option Trading</div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Tradable</label>
+                    <select class="form-select form-select-sm">
+                        <option>On</option><option>Off</option>
+                        <option class="text-primary fw-bold">Following Chain</option>
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Closing Only</label>
-            <div class="field-sub-content">
-                <select class="form-select">
-                    <option>On</option>
-                    <option>Off</option>
-                    <option class="text-primary fw-bold">Following Chain</option>
-                </select>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Closing Only</label>
+                    <select class="form-select form-select-sm">
+                        <option>On</option><option>Off</option>
+                        <option class="text-primary fw-bold">Following Chain</option>
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Trading Session</label>
-            <div class="field-sub-content">
-                <div class="form-check"><input class="form-check-input" type="checkbox" checked disabled> RTH (Regular Trading Hours)</div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Trading Session</label>
+                    <div class="d-flex gap-2 mt-1">
+                        <div class="form-check"><input class="form-check-input" type="checkbox" checked> <small>RTH</small></div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Order Types</label>
-            <div class="field-sub-content">
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Market</div>
-                <div class="form-check form-check-inline"><input class="form-check-input" type="checkbox"> Limit</div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Order Type</label>
+                    <div class="d-flex gap-2 mt-1">
+                        <div class="form-check"><input class="form-check-input" type="checkbox" checked> <small>Market</small></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox"> <small>Limit</small></div>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="attr-group">
-            <label class="field-label"><input type="checkbox" class="attr-trigger"> Routing Group</label>
-            <div class="field-sub-content">
-                <select class="form-select"><option>RG1</option><option>RG2</option></select>
+        <div class="module-card">
+            <div class="module-header"><i class="bi bi-geo"></i> Routing</div>
+            <div class="attr-item">
+                <input type="checkbox" class="form-check-input attr-checkbox">
+                <div class="attr-content">
+                    <label class="attr-label">Routing Group</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Search Routing ID (e.g. RG_001)">
+                </div>
             </div>
         </div>
     </div>
@@ -268,18 +346,13 @@
     let selectedLevel = null;
     let selectedCount = 0;
 
-    // 切换折叠
-    function toggle(id) {
-        const el = document.getElementById(id);
-        el.classList.toggle('show');
-    }
+    function toggle(id) { document.getElementById(id).classList.toggle('show'); }
 
-    // 核心逻辑：选择与排他性
+    // 选择与互斥逻辑
     document.querySelectorAll('.select-item').forEach(cb => {
         cb.addEventListener('change', function() {
             const row = this.closest('.tree-row');
             const level = row.dataset.level;
-
             if (this.checked) {
                 if (!selectedLevel) selectedLevel = level;
                 selectedCount++;
@@ -287,62 +360,60 @@
                 selectedCount--;
                 if (selectedCount === 0) selectedLevel = null;
             }
-
-            updateView();
+            updateTreeView();
         });
     });
 
-    function updateView() {
+    function updateTreeView() {
         document.querySelectorAll('.tree-row').forEach(row => {
             const checkbox = row.querySelector('.select-item');
-            
             if (selectedLevel && row.dataset.level !== selectedLevel) {
-                // 属于异级资产，锁定复选框
                 row.classList.add('row-locked');
                 checkbox.disabled = true;
-                checkbox.checked = false; // 安全起见清空非同级勾选
             } else {
-                // 同级或未选状态，解锁
                 row.classList.remove('row-locked');
                 checkbox.disabled = false;
             }
         });
-
         document.getElementById('bulkEditBtn').disabled = selectedCount === 0;
     }
 
-    // 打开右侧面板
+    // 批量操作面板打开逻辑
     document.getElementById('bulkEditBtn').addEventListener('click', () => {
-        const typeLabel = document.getElementById('currentTypeLabel');
-        const fieldsContainer = document.getElementById('fields-container');
-        const summary = document.getElementById('selectedSummary');
-
-        typeLabel.innerText = selectedLevel;
-        summary.innerText = `Preparing to update ${selectedCount} ${selectedLevel} units. Only checked attributes will be applied.`;
+        const container = document.getElementById('fields-container');
+        document.getElementById('currentTypeLabel').innerText = selectedLevel;
+        document.getElementById('selectedSummary').innerText = `Editing ${selectedCount} ${selectedLevel}(s).`;
         
-        // 根据 Level 加载模板
-        let tplId = '';
-        if (selectedLevel === 'Equity') tplId = 'tpl-equity';
-        else if (selectedLevel === 'Index') tplId = 'tpl-index';
-        else if (selectedLevel === 'Chain') tplId = 'tpl-chain';
-        else if (selectedLevel === 'Option') tplId = 'tpl-option';
+        // 渲染对应模板
+        const tplId = 'tpl-' + selectedLevel.toLowerCase();
+        container.innerHTML = document.getElementById(tplId).innerHTML;
 
-        fieldsContainer.innerHTML = document.getElementById(tplId).innerHTML;
-
-        // 绑定字段激活事件
-        fieldsContainer.querySelectorAll('.attr-trigger').forEach(trigger => {
-            trigger.addEventListener('change', function() {
-                const sub = this.closest('.attr-group').querySelector('.field-sub-content');
-                sub.style.display = this.checked ? 'block' : 'none';
+        // 核心：绑定属性激活逻辑
+        container.querySelectorAll('.attr-checkbox').forEach(chk => {
+            chk.addEventListener('change', function() {
+                const parent = this.closest('.attr-item');
+                if(this.checked) parent.classList.add('active');
+                else parent.classList.remove('active');
             });
         });
 
-        const panel = new bootstrap.Offcanvas(document.getElementById('editPanel'));
-        panel.show();
+        new bootstrap.Offcanvas(document.getElementById('editPanel')).show();
     });
 
+    // 模板内的特定联动逻辑
+    function toggleFractionalSub(isEligible) {
+        const subGroup = document.getElementById('fractional-subs');
+        if(isEligible) {
+            subGroup.style.opacity = "1";
+            subGroup.style.pointerEvents = "auto";
+        } else {
+            subGroup.style.opacity = "0.5";
+            subGroup.style.pointerEvents = "none";
+        }
+    }
+
     function submitChanges() {
-        alert("Success! The selected attributes have been pushed to the security database.");
+        alert("Success! Values pushed to database.");
         bootstrap.Offcanvas.getInstance(document.getElementById('editPanel')).hide();
     }
 </script>
