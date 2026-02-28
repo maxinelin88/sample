@@ -514,7 +514,7 @@
         document.getElementById('selectedSummary').innerHTML = `You are editing <strong>${selectedCount}</strong> items of type <strong>${selectedLevel}</strong>.`;
         
         // 简化的模板渲染 (示例只针对 Equity，实际逻辑同前)
-        const tplId = 'tpl-equity'; // 实际应根据 selectedLevel 动态获取
+        const tplId = 'tpl-' + selectedLevel.toLowerCase();
         const tplContent = document.getElementById(tplId) ? document.getElementById(tplId).innerHTML : '<div class="p-3 text-muted">No template for this type</div>';
         container.innerHTML = tplContent;
 
