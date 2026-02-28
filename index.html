@@ -553,10 +553,35 @@
         const tbody = document.getElementById('changeListBody');
         tbody.innerHTML = '';
         activeItems.forEach(item => {
-            const label = item.querySelector('label').innerText;
-            // 简单取值逻辑
-            const val = "Active / On"; 
-            tbody.innerHTML += `<tr><td>${label}</td><td><span class="target-value">${val}</span></td></tr>`;
+            const label = item.querySelector('.attr-label');
+            if (!label) return;
+            
+            let value = '';
+            const select = item.querySelector('select');
+            const input = item.querySelector('input[type="number"]');
+            const switchInput = item.querySelector('input[type="checkbox"][role="switch"]');
+            const checkboxes = item.querySelectorAll('.form-check-input[type="checkbox"]:not(.attr-checkbox):not([role="switch"])');
+            
+            if (select) {
+                value = select.options[select.selectedIndex].text;
+            } else if (switchInput) {
+                value = switchInput.checked ? 'On' : 'Off';
+            } else if (input) {
+                value = input.value;
+            } else if (checkboxes.length > 0) {
+                const checked = Array.from(checkboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.nextElementSibling.textContent.trim())
+                    .join(', ');
+                value = checked || 'None';
+            }
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="attr-name">${label.textContent}</td>
+                <td><span class="target-value">${value}</span></td>
+            `;
+            changeListBody.appendChild(row);
         });
 
         document.getElementById('editReason').value = ''; // 清空输入
